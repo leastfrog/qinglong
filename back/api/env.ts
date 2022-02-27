@@ -6,24 +6,22 @@ import { celebrate, Joi } from 'celebrate';
 const route = Router();
 
 export default (app: Router) => {
-  app.use('/', route);
-  route.get(
-    '/envs',
-    async (req: Request, res: Response, next: NextFunction) => {
-      const logger: Logger = Container.get('logger');
-      try {
-        const envService = Container.get(EnvService);
-        const data = await envService.envs(req.query.searchValue as string);
-        return res.send({ code: 200, data });
-      } catch (e) {
-        logger.error('🔥 error: %o', e);
-        return next(e);
-      }
-    },
-  );
+  app.use('/envs', route);
+
+  route.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    const logger: Logger = Container.get('logger');
+    try {
+      const envService = Container.get(EnvService);
+      const data = await envService.envs(req.query.searchValue as string);
+      return res.send({ code: 200, data });
+    } catch (e) {
+      logger.error('🔥 error: %o', e);
+      return next(e);
+    }
+  });
 
   route.post(
-    '/envs',
+    '/',
     celebrate({
       body: Joi.array().items(
         Joi.object({
@@ -47,13 +45,13 @@ export default (app: Router) => {
   );
 
   route.put(
-    '/envs',
+    '/',
     celebrate({
       body: Joi.object({
         value: Joi.string().required(),
         name: Joi.string().required(),
-        remarks: Joi.string().optional().allow(''),
-        _id: Joi.string().required(),
+        remarks: Joi.string().optional().allow('').allow(null),
+        id: Joi.number().required(),
       }),
     }),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -70,9 +68,9 @@ export default (app: Router) => {
   );
 
   route.delete(
-    '/envs',
+    '/',
     celebrate({
-      body: Joi.array().items(Joi.string().required()),
+      body: Joi.array().items(Joi.number().required()),
     }),
     async (req: Request, res: Response, next: NextFunction) => {
       const logger: Logger = Container.get('logger');
@@ -88,17 +86,17 @@ export default (app: Router) => {
   );
 
   route.put(
-    '/envs/:id/move',
+    '/:id/move',
     celebrate({
       params: Joi.object({
-        id: Joi.string().required(),
+        id: Joi.number().required(),
       }),
       body: Joi.object({
         fromIndex: Joi.number().required(),
         toIndex: Joi.number().required(),
       }),
     }),
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request<{ id: number }>, res: Response, next: NextFunction) => {
       const logger: Logger = Container.get('logger');
       try {
         const envService = Container.get(EnvService);
@@ -112,9 +110,9 @@ export default (app: Router) => {
   );
 
   route.put(
-    '/envs/disable',
+    '/disable',
     celebrate({
-      body: Joi.array().items(Joi.string().required()),
+      body: Joi.array().items(Joi.number().required()),
     }),
     async (req: Request, res: Response, next: NextFunction) => {
       const logger: Logger = Container.get('logger');
@@ -130,9 +128,9 @@ export default (app: Router) => {
   );
 
   route.put(
-    '/envs/enable',
+    '/enable',
     celebrate({
-      body: Joi.array().items(Joi.string().required()),
+      body: Joi.array().items(Joi.number().required()),
     }),
     async (req: Request, res: Response, next: NextFunction) => {
       const logger: Logger = Container.get('logger');
@@ -148,10 +146,10 @@ export default (app: Router) => {
   );
 
   route.put(
-    '/envs/name',
+    '/name',
     celebrate({
       body: Joi.object({
-        ids: Joi.array().items(Joi.string().required()),
+        ids: Joi.array().items(Joi.number().required()),
         name: Joi.string().required(),
       }),
     }),
@@ -169,17 +167,17 @@ export default (app: Router) => {
   );
 
   route.get(
-    '/envs/:id',
+    '/:id',
     celebrate({
       params: Joi.object({
-        id: Joi.string().required(),
+        id: Joi.number().required(),
       }),
     }),
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request<{ id: number }>, res: Response, next: NextFunction) => {
       const logger: Logger = Container.get('logger');
       try {
         const envService = Container.get(EnvService);
-        const data = await envService.get(req.params.id);
+        const data = await envService.getDb(req.params.id);
         return res.send({ code: 200, data });
       } catch (e) {
         logger.error('🔥 error: %o', e);

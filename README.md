@@ -56,12 +56,7 @@ sudo curl -sSL get.docker.com | sh
 
 ```bash
 docker run -dit \
-  -v $PWD/ql/config:/ql/config \
-  -v $PWD/ql/log:/ql/log \
-  -v $PWD/ql/db:/ql/db \
-  -v $PWD/ql/repo:/ql/repo \
-  -v $PWD/ql/raw:/ql/raw \
-  -v $PWD/ql/scripts:/ql/scripts \
+  -v $PWD/ql:/ql/data \
   -p 5700:5700 \
   --name qinglong \
   --hostname qinglong \
@@ -81,7 +76,7 @@ sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-c
 
 ```bash
 mkdir qinglong
-wget https://raw.githubusercontent.com/whyour/qinglong/master/docker-compose.yml
+wget https://raw.githubusercontent.com/whyour/qinglong/master/docker/docker-compose.yml
 
 # 启动
 docker-compose up -d
@@ -153,11 +148,10 @@ $ git clone git@github.com:whyour/qinglong.git
 $ cd qinglong
 $ cp .env.example .env
 $ yarn install
-$ yarn start-back
 $ yarn start
 ```
 
-打开你的浏览器，访问 http://127.0.0.1:5601
+打开你的浏览器，访问 http://127.0.0.1:5700
 
 ## 交流
 

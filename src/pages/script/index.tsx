@@ -10,6 +10,7 @@ import {
   Tooltip,
   Dropdown,
   Menu,
+  Empty,
 } from 'antd';
 import config from '@/utils/config';
 import { PageContainer } from '@ant-design/pro-layout';
@@ -112,16 +113,17 @@ const Script = ({ headerStyle, isPhone, theme, socketMessage }: any) => {
   const initGetScript = () => {
     const { p, s } = history.location.query as any;
     if (s) {
+      const vkey = `${p}/${s}`;
       const obj = {
         node: {
           title: s,
           value: s,
-          key: p ? `${p}/${s}` : s,
+          key: p ? vkey : s,
           parent: p,
         },
       };
       setExpandedKeys([p]);
-      onTreeSelect([`${p}/${s}`], obj);
+      onTreeSelect([vkey], obj);
     }
   };
 
@@ -377,7 +379,7 @@ const Script = ({ headerStyle, isPhone, theme, socketMessage }: any) => {
   ) : (
     <Menu>
       <Menu.Item key="add" icon={<PlusOutlined />} onClick={addFile}>
-        添加
+        新建
       </Menu.Item>
       <Menu.Item
         key="edit"
@@ -411,7 +413,7 @@ const Script = ({ headerStyle, isPhone, theme, socketMessage }: any) => {
                 value={select}
                 dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
                 treeData={data}
-                placeholder="请选择脚本文件"
+                placeholder="请选择脚本"
                 showSearch
                 onSelect={onSelect}
               />,
@@ -470,23 +472,43 @@ const Script = ({ headerStyle, isPhone, theme, socketMessage }: any) => {
         {!isPhone && (
           <SplitPane split="vertical" size={200} maxSize={-100}>
             <div className={styles['left-tree-container']}>
-              <Input.Search
-                className={styles['left-tree-search']}
-                onChange={onSearch}
-              ></Input.Search>
-              <div className={styles['left-tree-scroller']} ref={treeDom}>
-                <Tree
-                  className={styles['left-tree']}
-                  treeData={filterData}
-                  showIcon={true}
-                  height={height}
-                  selectedKeys={[select]}
-                  expandedKeys={expandedKeys}
-                  onExpand={onExpand}
-                  showLine={{ showLeafIcon: true }}
-                  onSelect={onTreeSelect}
-                ></Tree>
-              </div>
+              {data.length > 0 ? (
+                <>
+                  <Input.Search
+                    className={styles['left-tree-search']}
+                    onChange={onSearch}
+                    placeholder="请输入脚本名"
+                    allowClear
+                  ></Input.Search>
+                  <div className={styles['left-tree-scroller']} ref={treeDom}>
+                    <Tree
+                      className={styles['left-tree']}
+                      treeData={filterData}
+                      showIcon={true}
+                      height={height}
+                      selectedKeys={[select]}
+                      expandedKeys={expandedKeys}
+                      onExpand={onExpand}
+                      showLine={{ showLeafIcon: true }}
+                      onSelect={onTreeSelect}
+                    ></Tree>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                  }}
+                >
+                  <Empty
+                    description="暂无脚本"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                </div>
+              )}
             </div>
             <Editor
               language={mode}

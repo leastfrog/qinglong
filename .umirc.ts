@@ -4,10 +4,12 @@ const CompressionPlugin = require('compression-webpack-plugin');
 export default defineConfig({
   hash: true,
   layout: false,
+  outputPath: 'static/dist',
   nodeModulesTransform: {
     type: 'none',
   },
   fastRefresh: {},
+  esbuild: {},
   dynamicImport: {
     loading: '@/components/pageLoading',
   },
@@ -32,18 +34,9 @@ export default defineConfig({
   externals: {
     react: 'window.React',
     'react-dom': 'window.ReactDOM',
-    darkreader: 'window.DarkReader',
-    codemirror: 'window.CodeMirror',
-    'sockjs-client': 'window.SockJS',
   },
   scripts: [
     'https://gw.alipayobjects.com/os/lib/react/16.13.1/umd/react.production.min.js',
     'https://gw.alipayobjects.com/os/lib/react-dom/16.13.1/umd/react-dom.production.min.js',
-    'https://cdn.jsdelivr.net/npm/darkreader@4/darkreader.min.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5/lib/codemirror.min.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5/mode/shell/shell.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5/mode/python/python.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5/mode/javascript/javascript.js',
-    'https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js',
   ],
 });

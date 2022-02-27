@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, Key, useRef } from 'react';
-import { TreeSelect, Tree, Input } from 'antd';
+import { TreeSelect, Tree, Input, Empty } from 'antd';
 import config from '@/utils/config';
 import { PageContainer } from '@ant-design/pro-layout';
 import Editor from '@monaco-editor/react';
 import { request } from '@/utils/http';
 import styles from './index.module.less';
 import { Controlled as CodeMirror } from 'react-codemirror2';
-import { useCtx, useTheme } from '@/utils/hooks';
 import SplitPane from 'react-split-pane';
 
 function getFilterData(keyword: string, data: any) {
@@ -129,7 +128,7 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
             value={select}
             dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
             treeData={data}
-            placeholder="请选择日志文件"
+            placeholder="请选择日志"
             showSearch
             onSelect={onSelect}
           />,
@@ -143,21 +142,41 @@ const Log = ({ headerStyle, isPhone, theme }: any) => {
         {!isPhone && (
           <SplitPane split="vertical" size={200} maxSize={-100}>
             <div className={styles['left-tree-container']}>
-              <Input.Search
-                className={styles['left-tree-search']}
-                onChange={onSearch}
-              ></Input.Search>
-              <div className={styles['left-tree-scroller']} ref={treeDom}>
-                <Tree
-                  className={styles['left-tree']}
-                  treeData={filterData}
-                  showIcon={true}
-                  height={height}
-                  selectedKeys={[select]}
-                  showLine={{ showLeafIcon: true }}
-                  onSelect={onTreeSelect}
-                ></Tree>
-              </div>
+              {data.length > 0 ? (
+                <>
+                  <Input.Search
+                    className={styles['left-tree-search']}
+                    onChange={onSearch}
+                    placeholder="请输入日志名"
+                    allowClear
+                  ></Input.Search>
+                  <div className={styles['left-tree-scroller']} ref={treeDom}>
+                    <Tree
+                      className={styles['left-tree']}
+                      treeData={filterData}
+                      showIcon={true}
+                      height={height}
+                      selectedKeys={[select]}
+                      showLine={{ showLeafIcon: true }}
+                      onSelect={onTreeSelect}
+                    ></Tree>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                  }}
+                >
+                  <Empty
+                    description="暂无日志"
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  />
+                </div>
+              )}
             </div>
             <Editor
               language="shell"

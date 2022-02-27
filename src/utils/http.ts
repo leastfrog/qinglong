@@ -14,8 +14,8 @@ const errorHandler = function (error: any) {
       ? error.data.message || error.data
       : error.response.statusText;
     const responseStatus = error.response.status;
-    if (responseStatus === 502) {
-      message.error('服务异常，请手动执行ql check检查服务状态');
+    if ([502, 504].includes(responseStatus)) {
+      history.push('/error');
     } else if (responseStatus === 401) {
       if (history.location.pathname !== '/login') {
         message.error('登录已过期，请重新登录');
@@ -34,12 +34,12 @@ const errorHandler = function (error: any) {
 
 const _request = extend({ timeout: 60000, params: { t: time }, errorHandler });
 const apiWhiteList = [
-  '/api/login',
+  '/api/user/login',
   '/open/auth/token',
   '/api/user/two-factor/login',
   '/api/system',
-  '/api/init/user',
-  '/api/init/notification',
+  '/api/user/init',
+  '/api/user/notification/init',
 ];
 
 _request.interceptors.request.use((url, options) => {

@@ -31,7 +31,7 @@ const Login = () => {
     setTwoFactor(false);
     setWaitTime(null);
     request
-      .post(`${config.apiPrefix}login`, {
+      .post(`${config.apiPrefix}user/login`, {
         data: {
           username: values.username,
           password: values.password,
@@ -113,6 +113,14 @@ const Login = () => {
     }
   };
 
+  const codeInputChange = (e: React.ChangeEvent) => {
+    const { value } = e.target as any;
+    const regx = /^[0-9]{6}$/;
+    if (regx.test(value)) {
+      completeTowFactor({ code: value });
+    }
+  };
+
   useEffect(() => {
     const isAuth = localStorage.getItem(config.authKey);
     if (isAuth) {
@@ -127,7 +135,7 @@ const Login = () => {
           <img
             alt="logo"
             className={styles.logo}
-            src="https://z3.ax1x.com/2021/11/18/I7MpAe.png"
+            src="https://img.gejiba.com/images/a3f551e09ac19add4c49ec16228729c5.png"
           />
           <span className={styles.title}>
             {twoFactor ? '两步验证' : config.siteName}
@@ -144,12 +152,15 @@ const Login = () => {
                 {
                   pattern: /^[0-9]{6}$/,
                   message: '验证码为6位数字',
-                  validateTrigger: 'onBlur',
                 },
               ]}
-              hasFeedback
             >
-              <Input placeholder="6位数字" autoFocus autoComplete="off" />
+              <Input
+                placeholder="6位数字"
+                onChange={codeInputChange}
+                autoFocus
+                autoComplete="off"
+              />
             </FormItem>
             <Button
               type="primary"

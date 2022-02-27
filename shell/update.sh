@@ -151,11 +151,6 @@ update_repo() {
     make_dir "${dir_scripts}/${uniq_path}"
 
     local formatUrl="$url"
-    if [[ $github_proxy_url ]]; then
-        if [[ $url =~ "github.com" ]] || [[ $url =~ "githubusercontent.com" ]]; then
-            [[ ! $url =~ "https://ghproxy.com" ]] && formatUrl="${github_proxy_url}${url}"
-        fi
-    fi
     if [[ -d ${repo_path}/.git ]]; then
         reset_romote_url ${repo_path} "${formatUrl}" "${branch}"
         git_pull_scripts ${repo_path} "${branch}"
@@ -166,15 +161,7 @@ update_repo() {
         echo -e "\n更新${repo_path}成功...\n"
         diff_scripts "$repo_path" "$author" "$path" "$blackword" "$dependence"
     else
-        echo -e "\n更新${repo_path}失败，重新下载全新仓库...\n"
-        rm -rf ${repo_path}
-        git_clone_scripts "${formatUrl}" ${repo_path} "${branch}"
-        if [[ $exit_status -eq 0 ]]; then
-            echo -e "\n更新${repo_path}成功...\n"
-            diff_scripts "$repo_path" "$author" "$path" "$blackword" "$dependence"
-        else
-            echo -e "\n更新${repo_path}失败，请检查网络...\n"
-        fi
+        echo -e "\n更新${repo_path}失败，请检查网络...\n"
     fi
 }
 
@@ -183,15 +170,14 @@ update_raw() {
     echo -e "--------------------------------------------------------------\n"
     local url="$1"
     local raw_url="$url"
-    if [[ $github_proxy_url ]]; then
-        if [[ $url =~ "github.com" ]] || [[ $url =~ "githubusercontent.com" ]]; then
-            [[ ! $url =~ "https://ghproxy.com" ]] && raw_url="${github_proxy_url}${url}"
-        fi
-    fi
     local suffix="${raw_url##*.}"
     local raw_file_name="${uniq_path}.${suffix}"
     echo -e "开始下载：${raw_url} \n\n保存路径：$dir_raw/${raw_file_name}\n"
+
+    set_proxy
     wget -q --no-check-certificate -O "$dir_raw/${raw_file_name}.new" ${raw_url}
+    unset_proxy
+
     if [[ $? -eq 0 ]]; then
         mv "$dir_raw/${raw_file_name}.new" "$dir_raw/${raw_file_name}"
         echo -e "下载 ${raw_file_name} 成功...\n"
@@ -257,10 +243,12 @@ usage() {
 update_qinglong() {
     patch_version
 
+    pnpm install -g pm2 &>/dev/null
+    
     local no_restart="$1"
     [[ -f $dir_root/package.json ]] && ql_depend_old=$(cat $dir_root/package.json)
-    reset_romote_url ${dir_root} "${github_proxy_url}https://github.com/whyour/qinglong.git" "master"
-    git_pull_scripts $dir_root "master"
+    reset_romote_url ${dir_root} "https://github.com/whyour/qinglong.git" ${current_branch}
+    git_pull_scripts $dir_root ${current_branch}
 
     if [[ $exit_status -eq 0 ]]; then
         echo -e "\n更新$dir_root成功...\n"
@@ -274,10 +262,10 @@ update_qinglong() {
         echo -e "\n更新$dir_root失败，请检查原因...\n"
     fi
 
-    local url="${github_proxy_url}https://github.com/whyour/qinglong-static.git"
+    local url="https://github.com/whyour/qinglong-static.git"
     if [[ -d ${ql_static_repo}/.git ]]; then
-        reset_romote_url ${ql_static_repo} ${url} "master"
-        git_pull_scripts ${ql_static_repo} "master"
+        reset_romote_url ${ql_static_repo} ${url} ${current_branch}
+        git_pull_scripts ${ql_static_repo} ${current_branch}
     else
         git_clone_scripts ${url} ${ql_static_repo}
     fi
@@ -285,9 +273,9 @@ update_qinglong() {
         echo -e "\n更新$ql_static_repo成功...\n"
         local static_version=$(cat /ql/src/version.ts | perl -pe "s|.*\'(.*)\';\.*|\1|" | head -1)
         echo -e "\n当前版本 $static_version...\n"
-        cd $dir_root
-        rm -rf $dir_root/build && rm -rf $dir_root/dist
-        cp -rf $ql_static_repo/* $dir_root
+        
+        rm -rf $dir_static
+        cp -rf $ql_static_repo/* $dir_static
         if [[ $no_restart != "no-restart" ]]; then
             nginx -s reload 2>/dev/null || nginx -c /etc/nginx/nginx.conf
             echo -e "重启面板中..."
@@ -313,16 +301,18 @@ patch_version() {
     fi
 
     git config --global pull.rebase false
+
+    cp -f /ql/.env.example /ql/.env
 }
 
 reload_pm2() {
     pm2 l &>/dev/null
 
     pm2 delete panel --source-map-support --time &>/dev/null
-    pm2 start $dir_root/build/app.js -n panel --source-map-support --time &>/dev/null
+    pm2 start $dir_static/build/app.js -n panel --source-map-support --time &>/dev/null
 
     pm2 delete schedule --source-map-support --time &>/dev/null
-    pm2 start $dir_root/build/schedule.js -n schedule --source-map-support --time &>/dev/null
+    pm2 start $dir_static/build/schedule.js -n schedule --source-map-support --time &>/dev/null
 }
 
 ## 对比脚本

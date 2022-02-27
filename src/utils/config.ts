@@ -55,6 +55,14 @@ export default {
       name: '任务日志',
       value: 'logs',
     },
+    {
+      name: '依赖管理',
+      value: 'dependencies',
+    },
+    {
+      name: '系统信息',
+      value: 'system',
+    },
   ],
   scopesMap: {
     crons: '定时任务',
@@ -62,6 +70,8 @@ export default {
     configs: '配置文件',
     scripts: '脚本管理',
     logs: '任务日志',
+    dependencies: '依赖管理',
+    system: '系统信息',
   },
   notificationModes: [
     { value: 'gotify', label: 'Gotify' },
@@ -108,6 +118,10 @@ export default {
         label: 'barkPush',
         tip: 'Bark的信息IP/设备码，例如：https://api.day.app/XXXXXXXX',
         required: true,
+      },
+      {
+        label: 'barkIcon',
+        tip: 'BARK推送图标,自定义推送图标 (需iOS15或以上才能显示)',
       },
       { label: 'barkSound', tip: 'BARK推送铃声,铃声列表去APP查看复制填写' },
       { label: 'barkGroup', tip: 'BARK推送消息的分组, 默认为qinglong' },
@@ -197,6 +211,7 @@ export default {
     '/diff': '对比工具',
     '/log': '任务日志',
     '/setting': '系统设置',
+    '/error': '错误日志',
   },
   dependenceTypes: ['nodejs', 'python3', 'linux'],
 };

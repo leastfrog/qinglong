@@ -12,6 +12,7 @@ import {
   Modal,
   message,
   Typography,
+  Input,
 } from 'antd';
 import config from '@/utils/config';
 import { PageContainer } from '@ant-design/pro-layout';
@@ -32,7 +33,7 @@ import SecuritySettings from './security';
 import LoginLog from './loginLog';
 import NotificationSetting from './notification';
 import CheckUpdate from './checkUpdate';
-import { useForm } from 'antd/lib/form/Form';
+import About from './about';
 
 const { Text } = Typography;
 const optionsWithDisabled = [
@@ -124,7 +125,7 @@ const Setting = ({
   const [loginLogData, setLoginLogData] = useState<any[]>([]);
   const [notificationInfo, setNotificationInfo] = useState<any>();
   const [logRemoveFrequency, setLogRemoveFrequency] = useState<number>();
-  const [form] = useForm();
+  const [form] = Form.useForm();
 
   const themeChange = (e: any) => {
     setTheme(e.target.value);
@@ -164,7 +165,7 @@ const Setting = ({
       ),
       onOk() {
         request
-          .delete(`${config.apiPrefix}apps`, { data: [record._id] })
+          .delete(`${config.apiPrefix}apps`, { data: [record.id] })
           .then((data: any) => {
             if (data.code === 200) {
               message.success('删除成功');
@@ -198,7 +199,7 @@ const Setting = ({
       ),
       onOk() {
         request
-          .put(`${config.apiPrefix}apps/${record._id}/reset-secret`)
+          .put(`${config.apiPrefix}apps/${record.id}/reset-secret`)
           .then((data: any) => {
             if (data.code === 200) {
               message.success('重置成功');
@@ -222,7 +223,7 @@ const Setting = ({
   };
 
   const handleApp = (app: any) => {
-    const index = dataSource.findIndex((x) => x._id === app._id);
+    const index = dataSource.findIndex((x) => x.id === app.id);
     const result = [...dataSource];
     if (index === -1) {
       result.push(app);
@@ -273,8 +274,10 @@ const Setting = ({
     request
       .get(`${config.apiPrefix}system/log/remove`)
       .then((data: any) => {
-        setLogRemoveFrequency(data.data.frequency);
-        form.setFieldsValue({ frequency: data.data.frequency });
+        if (data.data.info) {
+          const { frequency } = data.data.info;
+          setLogRemoveFrequency(frequency);
+        }
       })
       .catch((error: any) => {
         console.log(error);
@@ -319,7 +322,7 @@ const Setting = ({
         tabActiveKey === 'app'
           ? [
               <Button key="2" type="primary" onClick={() => addApp()}>
-                添加应用
+                新建应用
               </Button>,
             ]
           : []
@@ -339,7 +342,7 @@ const Setting = ({
             columns={columns}
             pagination={false}
             dataSource={dataSource}
-            rowKey="_id"
+            rowKey="id"
             size="middle"
             scroll={{ x: 768 }}
             loading={loading}
@@ -367,19 +370,27 @@ const Setting = ({
               name="frequency"
               tooltip="每x天自动删除x天以前的日志"
             >
-              <InputNumber
-                addonBefore="每"
-                addonAfter="天"
-                style={{ width: 150 }}
-                min={0}
-                onBlur={updateRemoveLogFrequency}
-                onChange={(value) => setLogRemoveFrequency(value)}
-              />
+              <Input.Group compact>
+                <InputNumber
+                  addonBefore="每"
+                  addonAfter="天"
+                  style={{ width: 150 }}
+                  min={0}
+                  value={logRemoveFrequency}
+                  onChange={(value) => setLogRemoveFrequency(value)}
+                />
+                <Button type="primary" onClick={updateRemoveLogFrequency}>
+                  确认
+                </Button>
+              </Input.Group>
             </Form.Item>
             <Form.Item label="检查更新" name="update">
               <CheckUpdate socketMessage={socketMessage} />
             </Form.Item>
           </Form>
+        </Tabs.TabPane>
+        <Tabs.TabPane tab="关于" key="about">
+          <About />
         </Tabs.TabPane>
       </Tabs>
       <AppModal

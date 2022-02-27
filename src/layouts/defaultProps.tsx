@@ -26,6 +26,12 @@ export default {
         component: '@/pages/initialization/index',
       },
       {
+        name: '错误',
+        path: '/error',
+        hideInMenu: true,
+        component: '@/pages/error/index',
+      },
+      {
         path: '/crontab',
         name: '定时任务',
         icon: <FieldTimeOutlined />,
@@ -79,6 +85,5 @@ export default {
   fixSiderbar: true,
   contentWidth: 'Fixed',
   splitMenus: false,
-  logo: 'https://z3.ax1x.com/2021/11/18/I7MpAe.png',
   siderWidth: 180,
 } as any;

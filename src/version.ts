@@ -1,10 +1,11 @@
-export const version = '2.10.9';
-export const changeLogLink = 'https://t.me/jiao_long/228';
-export const changeLog = `2.10.9 版本说明
-1. 任务管理支持任务名跳转脚本管理页，感谢 https://github.com/kilo5hz PR
-2. 系统通知支持gotify，感谢 https://github.com/kilo5hz PR
-3. 定时任务列表pageSize增加200/500/1000，感谢 https://github.com/fzls PR
-4. 修复deps目录依赖文件拷贝
-5. 修改alpine基础镜像版本，解决arm32位系统无法启动容器，感谢 https://github.com/lx200916
-6. 修复调试功能
+export const version = '2.11.3';
+export const changeLogLink = 'https://t.me/jiao_long/262';
+export const changeLog = `2.11.3 版本说明
+1. 修复定时任务排序
+2. 环境变量增加更新时间排序
+3. 修复logo地址
+4. 修改check命令
+5. 安装依赖默认使用Proxy_url代理地址
+6. 修改apk源地址
+7. bark支持自定义图标，感谢 https://github.com/Ukenn2112 PR
 `;

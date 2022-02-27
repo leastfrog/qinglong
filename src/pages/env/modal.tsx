@@ -34,18 +34,22 @@ const EnvModal = ({
         payload = [{ value, name, remarks }];
       }
     } else {
-      payload = { ...values, _id: env._id };
+      payload = { ...values, id: env.id };
     }
-    const { code, data } = await request[method](`${config.apiPrefix}envs`, {
-      data: payload,
-    });
-    if (code === 200) {
-      message.success(env ? '更新变量成功' : '添加变量成功');
-    } else {
-      message.error(data);
+    try {
+      const { code, data } = await request[method](`${config.apiPrefix}envs`, {
+        data: payload,
+      });
+      if (code === 200) {
+        message.success(env ? '更新变量成功' : '新建变量成功');
+      } else {
+        message.error(data);
+      }
+      setLoading(false);
+      handleCancel(data);
+    } catch (error: any) {
+      setLoading(false);
     }
-    setLoading(false);
-    handleCancel(data);
   };
 
   useEffect(() => {
@@ -77,7 +81,7 @@ const EnvModal = ({
           rules={[
             { required: true, message: '请输入环境变量名称', whitespace: true },
             {
-              pattern: /^[a-zA-Z_][0-9a-zA-Z_]+$/,
+              pattern: /^[a-zA-Z_][0-9a-zA-Z_]*$/,
               message: '只能输入字母数字下划线，且不能以数字开头',
             },
           ]}

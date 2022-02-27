@@ -2,15 +2,17 @@
 
 ## 目录
 dir_root=/ql
+dir_data=$dir_root/data
 dir_shell=$dir_root/shell
 dir_sample=$dir_root/sample
-dir_config=$dir_root/config
-dir_scripts=$dir_root/scripts
-dir_repo=$dir_root/repo
-dir_raw=$dir_root/raw
-dir_log=$dir_root/log
-dir_db=$dir_root/db
-dir_dep=$dir_root/deps
+dir_static=$dir_root/static
+dir_config=$dir_data/config
+dir_scripts=$dir_data/scripts
+dir_repo=$dir_data/repo
+dir_raw=$dir_data/raw
+dir_log=$dir_data/log
+dir_db=$dir_data/db
+dir_dep=$dir_data/deps
 dir_list_tmp=$dir_log/.tmp
 dir_code=$dir_log/code
 dir_update_log=$dir_log/update
@@ -35,6 +37,8 @@ file_notify_js=$dir_scripts/sendNotify.js
 task_error_log_path=$dir_log/task_error.log
 nginx_app_conf=$dir_root/docker/front.conf
 nginx_conf=$dir_root/docker/nginx.conf
+dep_notify_py=$dir_dep/notify.py
+dep_notify_js=$dir_dep/sendNotify.js
 
 ## 清单文件
 list_crontab_user=$dir_config/crontab.list
@@ -58,6 +62,7 @@ original_name=(
 
 init_env() {
     export NODE_PATH=/usr/local/bin:/usr/local/pnpm-global/5/node_modules:/usr/local/lib/node_modules
+    export PYTHONUNBUFFERED=1
 }
 
 import_config() {
@@ -65,14 +70,27 @@ import_config() {
     [[ -f $file_env ]] && . $file_env
 
     command_timeout_time=${CommandTimeoutTime:-"1h"}
-    github_proxy_url=${GithubProxyUrl:-""}
+    proxy_url=${ProxyUrl:-""}
     file_extensions=${RepoFileExtensions:-"js py"}
+    current_branch=${QL_BRANCH}
 
     if [[ -n "${DefaultCronRule}" ]]; then
         default_cron="${DefaultCronRule}"
     else
         default_cron="$(random_range 0 59) $(random_range 0 23) * * *"
     fi
+}
+
+set_proxy() {
+    if [[ $proxy_url ]]; then
+        export http_proxy="${proxy_url}"
+        export https_proxy="${proxy_url}"
+    fi
+}
+
+unset_proxy() {
+    unset http_proxy
+    unset https_proxy
 }
 
 make_dir() {
@@ -210,9 +228,23 @@ fix_config() {
         cat /dev/null > /etc/nginx/conf.d/default.conf
         echo
     fi
+
+    if [[ ! -s $dep_notify_js ]]; then
+        echo -e "复制一份 $file_notify_js_sample 为 $dep_notify_js\n"
+        cp -fv $file_notify_js_sample $dep_notify_js
+        echo
+    fi
+
+    if [[ ! -s $dep_notify_py ]]; then
+        echo -e "复制一份 $file_notify_py_sample 为 $dep_notify_py\n"
+        cp -fv $file_notify_py_sample $dep_notify_py
+        echo
+    fi
+    
 }
 
 npm_install_sub() {
+    set_proxy
     if [ $is_termux -eq 1 ]; then
         npm install --production --no-bin-links --registry=https://registry.npm.taobao.org || npm install --production --no-bin-links
     elif ! type pnpm &>/dev/null; then
@@ -220,6 +252,7 @@ npm_install_sub() {
     else
         pnpm install --production --registry=https://registry.npm.taobao.org || pnpm install --production
     fi
+    unset_proxy
 }
 
 npm_install_1() {
@@ -272,21 +305,28 @@ git_clone_scripts() {
     local branch=$3
     [[ $branch ]] && local part_cmd="-b $branch "
     echo -e "开始克隆仓库 $url 到 $dir\n"
+    
+    set_proxy
     git clone $part_cmd $url $dir
     exit_status=$?
+    unset_proxy
 }
 
 git_pull_scripts() {
     local dir_current=$(pwd)
     local dir_work="$1"
     local branch="$2"
-    [[ $branch ]] && local part_cmd="origin/${branch}"
+    [[ $branch ]] && git checkout ${branch}
     cd $dir_work
     echo -e "开始更新仓库：$dir_work\n"
+
+    set_proxy
     git fetch --all
     exit_status=$?
-    git reset --hard $part_cmd
-    git pull
+    git reset --hard &>/dev/null
+    git pull --allow-unrelated-histories &>/dev/null
+    unset_proxy
+    
     cd $dir_current
 }
 
@@ -301,8 +341,8 @@ reset_romote_url() {
     if [[ -d "$dir_work/.git" ]]; then
         cd $dir_work
         [[ -f ".git/index.lock" ]] && rm -f .git/index.lock >/dev/null
-        git remote set-url origin $url >/dev/null
-        git reset --hard $part_cmd >/dev/null
+        git remote set-url origin $url &>/dev/null
+        git reset --hard $part_cmd &>/dev/null
         cd $dir_current
     fi
 }
